@@ -1,0 +1,21 @@
+# Data files
+data/
+
+# Output files
+outputs/
+
+# Built documentation
+docs/build/
+
+# Virtual environments
+.venv/
+
+# Packaging artifacts
+build/
+*.egg-info/
+
+# Python cache files
+__pycache__/
+
+# macOS-specific files
+.DS_Store
