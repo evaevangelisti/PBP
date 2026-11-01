@@ -36,7 +36,7 @@ def write_predictions(
     battle_ids: Sequence[int],
     predictions: Sequence[int],
 ) -> None:
-    """Write battle identifiers and predictions to a new CSV file.
+    """Write battle identifiers and predictions, replacing an existing CSV file.
 
     Args:
         path: Destination path for the CSV file.
@@ -44,11 +44,10 @@ def write_predictions(
         predictions: Binary outcomes aligned with the battle identifiers.
 
     Raises:
-        FileExistsError: If the destination file already exists.
         OSError: If the destination file cannot be opened or written.
         ValueError: If sequence lengths differ, possibly after writing some rows.
     """
-    with path.open("x", encoding="utf-8", newline="") as stream:
+    with path.open("w", encoding="utf-8", newline="") as stream:
         writer = csv.writer(stream)
 
         writer.writerow(

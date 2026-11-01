@@ -45,26 +45,36 @@ class Battle(TypedDict):
 class TrainingBattle(Battle):
     """Include the outcome available in training records."""
 
-    player_won: bool
+    player_won: int
 
 
 def read_battles(
     path: Path,
-) -> list[Battle]:
-    """Read battle records from a JSON Lines file.
+) -> tuple[list[Battle], int]:
+    """Read battle records and skip malformed JSON Lines records.
 
     Args:
         path: Path to the input JSON Lines file.
 
     Returns:
-        Battle records in their original file order.
+        A tuple containing parsed battle records and the number of skipped lines.
 
     Raises:
         OSError: If the input file cannot be opened or read.
-        json.JSONDecodeError: If a line contains invalid JSON.
     """
-    with path.open(encoding="utf-8") as stream:
-        return [
-            cast(Battle, json.loads(line))
-            for line in tqdm(stream, desc=str(path), unit="battle")
-        ]
+    battles: list[Battle] = []
+    skipped_count = 0
+
+    with path.open("rb") as stream:
+        for line in tqdm(stream, desc=str(path), unit=" battle"):
+            try:
+                battle = cast(Battle, json.loads(line))
+                _ = battle["battle_id"]
+            except (json.JSONDecodeError, UnicodeDecodeError, KeyError, TypeError):
+                skipped_count += 1
+
+                continue
+
+            battles.append(battle)
+
+    return battles, skipped_count

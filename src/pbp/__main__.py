@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import pickle
 from pathlib import Path
 from typing import cast
 
@@ -29,29 +30,52 @@ def main(
         output_directory: Destination directory for the model and predictions.
 
     Raises:
-        FileExistsError: If either destination file already exists.
         OSError: If an input cannot be read or an output cannot be written.
-        json.JSONDecodeError: If an input line contains invalid JSON.
-        KeyError: If a battle lacks a required field.
-        ValueError: If training or prediction receives unsupported data.
+        ValueError: If no usable battles remain or the model rejects the data.
         pickle.PicklingError: If the fitted classifier cannot be serialized.
     """
-    training_battles = read_battles(training_path)
+    training_records, _ = read_battles(training_path)
+    training_battles = [
+        cast(TrainingBattle, battle)
+        for battle in training_records
+        if battle.get("player_won") in (0, 1)
+    ]
 
-    test_battles = read_battles(test_path)
+    if not training_battles:
+        raise ValueError("No training battles with usable targets were read.")
+
+    test_battles, skipped_test_records = read_battles(test_path)
+
+    if not test_battles:
+        raise ValueError("No test battles were read.")
 
     training_features = extract_features(
         training_battles,
         description="Extracting training features",
     )
 
+    if training_features.empty:
+        raise ValueError("No training battles remain after feature extraction.")
+
     test_features = extract_features(
         test_battles,
         description="Extracting test features",
     )
 
+    if test_features.empty:
+        raise ValueError("No test battles remain after feature extraction.")
+
+    skipped_test_records += len(test_battles) - len(test_features)
+
+    if skipped_test_records:
+        _logger.warning(
+            "Skipped %d test records; the prediction file will be incomplete.",
+            skipped_test_records,
+        )
+
     targets = [
-        int(cast(TrainingBattle, battle)["player_won"]) for battle in training_battles
+        int(training_battles[cast(int, battle_index)]["player_won"])
+        for battle_index in training_features.index
     ]
 
     model = LogisticRegression(max_iter=1000)
@@ -59,7 +83,7 @@ def main(
     _logger.info(
         "Training %s on %d battles with %d features.",
         type(model).__name__,
-        len(training_battles),
+        len(training_features),
         training_features.shape[1],
     )
 
@@ -76,13 +100,17 @@ def main(
 
     _logger.info("Model saved to %s.", model_path)
 
-    _logger.info("Predicting %d test battles.", len(test_battles))
+    _logger.info("Predicting %d test battles.", len(test_features))
+
     predictions = predict(model, test_features)
 
     predictions_path = output_directory / "predictions.csv"
     write_predictions(
         predictions_path,
-        [battle["battle_id"] for battle in test_battles],
+        [
+            test_battles[cast(int, battle_index)]["battle_id"]
+            for battle_index in test_features.index
+        ],
         predictions,
     )
 
@@ -109,11 +137,23 @@ if __name__ == "__main__":
 
     logging.basicConfig(
         level=logging.INFO,
-        format="%(levelname)s: %(message)s",
+        format="%(levelname)s %(message)s",
     )
 
-    main(
-        cast(Path, arguments.training_path),
-        cast(Path, arguments.test_path),
-        cast(Path, arguments.output_directory),
-    )
+    try:
+        main(
+            cast(Path, arguments.training_path),
+            cast(Path, arguments.test_path),
+            cast(Path, arguments.output_directory),
+        )
+    except OSError as error:
+        if error.filename is None:
+            _logger.error("%s", error.strerror)
+        else:
+            _logger.error("%s (%s)", error.strerror, error.filename)
+
+        raise SystemExit(1) from error
+    except (ValueError, pickle.PicklingError) as error:
+        _logger.error("%s", error)
+
+        raise SystemExit(1) from error
