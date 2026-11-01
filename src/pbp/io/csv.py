@@ -1,4 +1,4 @@
-"""Read type interactions and write prediction tables."""
+"""Read and write CSV files."""
 
 import csv
 from collections.abc import Sequence
@@ -8,18 +8,18 @@ from pathlib import Path
 def read_type_chart(
     path: Path,
 ) -> dict[tuple[str, str], float]:
-    """Read the type multipliers explicitly listed in a CSV file.
+    """Read the type chart.
 
     Args:
-        path: Path to the Generation 2 type chart.
+        path: Input file.
 
     Returns:
-        A mapping from attacking and defending type pairs to listed multipliers.
+        Multipliers by attacking and defending type.
 
     Raises:
-        OSError: If the input file cannot be opened or read.
+        OSError: If the file cannot be read.
         KeyError: If a required column is missing.
-        ValueError: If a multiplier cannot be converted to a float.
+        ValueError: If a multiplier is invalid.
     """
     with path.open(encoding="utf-8", newline="") as stream:
         return {
@@ -36,16 +36,16 @@ def write_predictions(
     battle_ids: Sequence[int],
     predictions: Sequence[int],
 ) -> None:
-    """Write battle identifiers and predictions, replacing an existing CSV file.
+    """Write predictions.
 
     Args:
-        path: Destination path for the CSV file.
-        battle_ids: Battle identifiers in prediction order.
-        predictions: Binary outcomes aligned with the battle identifiers.
+        path: Output file.
+        battle_ids: Battle identifiers in row order.
+        predictions: Binary predictions in matching order.
 
     Raises:
-        OSError: If the destination file cannot be opened or written.
-        ValueError: If sequence lengths differ, possibly after writing some rows.
+        OSError: If writing fails.
+        ValueError: If identifier and prediction counts differ.
     """
     with path.open("w", encoding="utf-8", newline="") as stream:
         writer = csv.writer(stream)

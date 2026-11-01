@@ -1,4 +1,4 @@
-"""Save and load fitted classifiers."""
+"""Save trained models."""
 
 import pickle
 from pathlib import Path
@@ -10,15 +10,15 @@ def save_model(
     path: Path,
     model: Classifier,
 ) -> None:
-    """Serialize a classifier.
+    """Save a model.
 
     Args:
-        path: Destination path for the serialized classifier.
-        model: Classifier to save, including its fitted state.
+        path: Output file.
+        model: Classifier to save.
 
     Raises:
-        OSError: If the destination file cannot be opened or written.
-        pickle.PicklingError: If the classifier cannot be serialized.
+        OSError: If writing fails.
+        pickle.PicklingError: If serialization fails.
     """
     with path.open("wb") as stream:
         pickle.dump(

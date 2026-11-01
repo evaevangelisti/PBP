@@ -1,4 +1,4 @@
-"""Predict outcomes with a fitted classifier."""
+"""Predict battle outcomes."""
 
 import pandas as pd
 
@@ -9,17 +9,17 @@ def predict(
     model: Classifier,
     features: pd.DataFrame,
 ) -> list[int]:
-    """Predict binary outcomes with a fitted classifier.
+    """Predict outcomes.
 
     Args:
-        model: Classifier fitted on the same feature representation.
-        features: Numerical feature table with one row per battle.
+        model: Trained classifier.
+        features: Prediction features.
 
     Returns:
-        Binary predictions in feature row order.
+        Binary predictions in row order.
 
     Raises:
         sklearn.exceptions.NotFittedError: If the classifier has not been fitted.
-        ValueError: If the classifier rejects the input features.
+        ValueError: If input features are invalid.
     """
     return [int(value) for value in model.predict(features)]

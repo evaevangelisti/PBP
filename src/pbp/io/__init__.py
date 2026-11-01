@@ -1,4 +1,4 @@
-"""Expose input and output operations."""
+"""Read and write data."""
 
 from .csv import read_type_chart, write_predictions
 from .jsonl import read_battles

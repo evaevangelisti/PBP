@@ -1,4 +1,4 @@
-"""Train a classifier and write test predictions."""
+"""Run the prediction pipeline."""
 
 import argparse
 import logging
@@ -22,17 +22,17 @@ def main(
     test_path: Path,
     output_directory: Path,
 ) -> None:
-    """Train a classifier, save it, and write test predictions.
+    """Train a classifier and predict outcomes.
 
     Args:
-        training_path: Path to labeled training battles in JSON Lines format.
-        test_path: Path to unlabeled test battles in JSON Lines format.
-        output_directory: Destination directory for the model and predictions.
+        training_path: Training file.
+        test_path: Test file.
+        output_directory: Output directory.
 
     Raises:
-        OSError: If an input cannot be read or an output cannot be written.
-        ValueError: If no usable battles remain or the model rejects the data.
-        pickle.PicklingError: If the fitted classifier cannot be serialized.
+        OSError: If file access fails.
+        ValueError: If the data is unusable.
+        pickle.PicklingError: If serialization fails.
     """
     training_records, _ = read_battles(training_path)
     training_battles = [
@@ -137,7 +137,7 @@ if __name__ == "__main__":
 
     logging.basicConfig(
         level=logging.INFO,
-        format="%(levelname)s %(message)s",
+        format="%(levelname)s: %(message)s",
     )
 
     try:

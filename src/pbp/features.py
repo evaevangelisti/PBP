@@ -1,4 +1,4 @@
-"""Extract numerical features from observed battle records."""
+"""Extract battle features."""
 
 from collections.abc import Sequence
 
@@ -14,14 +14,14 @@ def extract_features(
     *,
     description: str = "Extracting features",
 ) -> pd.DataFrame:
-    """Extract finite numerical features and skip unusable battles.
+    """Extract features.
 
     Args:
-        battles: Battle records in the desired row order.
-        description: Label displayed beside the progress bar.
+        battles: Input battles.
+        description: Progress bar label.
 
     Returns:
-        A feature table indexed by the original positions of retained battles.
+        Features indexed by input position.
     """
     rows: list[dict[str, float]] = []
     retained_indices: list[int] = []

@@ -1,4 +1,4 @@
-"""Train a configured classifier."""
+"""Train classifiers."""
 
 from collections.abc import Sequence
 
@@ -13,18 +13,18 @@ def train_model[Model: Classifier](
     features: pd.DataFrame,
     targets: Sequence[int],
 ) -> Model:
-    """Fit a configured classifier on the supplied training examples.
+    """Train a classifier.
 
     Args:
-        model: Classifier whose configuration has already been selected.
-        features: Numerical feature table with one row per battle.
-        targets: Binary outcomes aligned with the feature rows.
+        model: Classifier to train.
+        features: Training features.
+        targets: Training targets in row order.
 
     Returns:
-        The supplied classifier, fitted in place.
+        Trained classifier.
 
     Raises:
-        ValueError: If the classifier rejects the parameters or training data.
+        ValueError: If data or parameters are invalid.
     """
     model.fit(features, targets)
 

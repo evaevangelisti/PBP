@@ -1,1 +1,1 @@
-"""Train classifiers and predict Pokémon battle outcomes."""
+"""Predict Pokémon battle outcomes."""

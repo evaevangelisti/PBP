@@ -1,4 +1,4 @@
-"""Read battle records from JSON Lines files."""
+"""Read battle records."""
 
 import json
 from pathlib import Path
@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 
 class PokemonDetails(TypedDict):
-    """Describe the base statistics used for feature extraction."""
+    """Pokémon base statistics."""
 
     base_hp: int
     base_atk: int
@@ -19,7 +19,7 @@ class PokemonDetails(TypedDict):
 
 
 class PokemonState(TypedDict):
-    """Describe the observed state of an active Pokémon."""
+    """Observed Pokémon state."""
 
     name: str
     hp_pct: float
@@ -27,14 +27,14 @@ class PokemonState(TypedDict):
 
 
 class Turn(TypedDict):
-    """Describe the states observed during a turn."""
+    """Observed turn states."""
 
     p1_pokemon_state: PokemonState
     p2_pokemon_state: PokemonState
 
 
 class Battle(TypedDict):
-    """Describe the battle fields used for feature extraction."""
+    """Battle record."""
 
     battle_id: int
     p1_team_details: list[PokemonDetails]
@@ -43,7 +43,7 @@ class Battle(TypedDict):
 
 
 class TrainingBattle(Battle):
-    """Include the outcome available in training records."""
+    """Labeled battle record."""
 
     player_won: int
 
@@ -51,16 +51,16 @@ class TrainingBattle(Battle):
 def read_battles(
     path: Path,
 ) -> tuple[list[Battle], int]:
-    """Read battle records and skip malformed JSON Lines records.
+    """Read battle records.
 
     Args:
-        path: Path to the input JSON Lines file.
+        path: Input file.
 
     Returns:
-        A tuple containing parsed battle records and the number of skipped lines.
+        Parsed battles and number of skipped lines.
 
     Raises:
-        OSError: If the input file cannot be opened or read.
+        OSError: If the file cannot be read.
     """
     battles: list[Battle] = []
     skipped_count = 0

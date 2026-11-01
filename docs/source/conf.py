@@ -1,4 +1,4 @@
-"""Configure Sphinx and the Google-style API reference."""
+"""Configure Sphinx."""
 
 from importlib import metadata
 
