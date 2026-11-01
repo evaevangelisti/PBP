@@ -1,4 +1,4 @@
-# Input and output
+# IO
 
 ```{eval-rst}
 .. automodule:: pbp.io.jsonl
