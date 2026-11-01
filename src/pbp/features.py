@@ -4,17 +4,21 @@ from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from .io.jsonl import Battle
 
 
 def extract_features(
     battles: Sequence[Battle],
+    *,
+    description: str = "Extracting features",
 ) -> pd.DataFrame:
     """Extract base statistics and observed knockout counts.
 
     Args:
         battles: Battle records in the desired row order.
+        description: Label displayed beside the progress bar.
 
     Returns:
         A numerical feature table preserving the input battle order.
@@ -24,7 +28,7 @@ def extract_features(
     """
     rows: list[dict[str, float]] = []
 
-    for battle in battles:
+    for battle in tqdm(battles, desc=description, unit="battle"):
         team = battle["p1_team_details"]
         opponent_lead = battle["p2_lead_details"]
 

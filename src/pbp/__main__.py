@@ -1,6 +1,7 @@
 """Train a classifier and write test predictions."""
 
 import argparse
+import logging
 from pathlib import Path
 from typing import cast
 
@@ -11,6 +12,8 @@ from .io import read_battles, save_model, write_predictions
 from .io.jsonl import TrainingBattle
 from .prediction import predict
 from .training import train_model
+
+_logger: logging.Logger = logging.getLogger(__name__)
 
 
 def main(
@@ -34,35 +37,56 @@ def main(
         pickle.PicklingError: If the fitted classifier cannot be serialized.
     """
     training_battles = read_battles(training_path)
+
     test_battles = read_battles(test_path)
 
-    training_features = extract_features(training_battles)
-    test_features = extract_features(test_battles)
+    training_features = extract_features(
+        training_battles,
+        description="Extracting training features",
+    )
+
+    test_features = extract_features(
+        test_battles,
+        description="Extracting test features",
+    )
 
     targets = [
         int(cast(TrainingBattle, battle)["player_won"]) for battle in training_battles
     ]
 
+    model = LogisticRegression(max_iter=1000)
+
+    _logger.info(
+        "Training %s on %d battles with %d features.",
+        type(model).__name__,
+        len(training_battles),
+        training_features.shape[1],
+    )
+
     model = train_model(
-        LogisticRegression(max_iter=1000),
+        model,
         training_features,
         targets,
     )
 
     output_directory.mkdir(parents=True, exist_ok=True)
 
-    save_model(
-        output_directory / "model.pkl",
-        model,
-    )
+    model_path = output_directory / "model.pkl"
+    save_model(model_path, model)
 
+    _logger.info("Model saved to %s.", model_path)
+
+    _logger.info("Predicting %d test battles.", len(test_battles))
     predictions = predict(model, test_features)
 
+    predictions_path = output_directory / "predictions.csv"
     write_predictions(
-        output_directory / "predictions.csv",
+        predictions_path,
         [battle["battle_id"] for battle in test_battles],
         predictions,
     )
+
+    _logger.info("Predictions saved to %s.", predictions_path)
 
 
 if __name__ == "__main__":
@@ -82,6 +106,11 @@ if __name__ == "__main__":
     )
 
     arguments = parser.parse_args()
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(levelname)s: %(message)s",
+    )
 
     main(
         cast(Path, arguments.training_path),

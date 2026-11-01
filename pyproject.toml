@@ -17,6 +17,7 @@ dependencies = [
     "numpy>=2.5.4",
     "pandas>=3.1.0",
     "scikit-learn>=1.9.1",
+    "tqdm>=4.70.1",
 ]
 
 # Development dependencies.
@@ -35,6 +36,7 @@ typing = [
     "basedpyright>=1.39.9",
     "pandas-stubs>=3.1.0.261029",
     "scikit-learn-stubs>=0.0.3",
+    "types-tqdm>=4.70.0.20260906",
 ]
 
 # Formatting and linting.

@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 from typing import TypedDict, cast
 
+from tqdm import tqdm
+
 
 class PokemonDetails(TypedDict):
     """Describe the base statistics used for feature extraction."""
@@ -62,4 +64,7 @@ def read_battles(
         json.JSONDecodeError: If a line contains invalid JSON.
     """
     with path.open(encoding="utf-8") as stream:
-        return [cast(Battle, json.loads(line)) for line in stream]
+        return [
+            cast(Battle, json.loads(line))
+            for line in tqdm(stream, desc=str(path), unit="battle")
+        ]
