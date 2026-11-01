@@ -1,12 +1,109 @@
 """Extract battle features."""
 
 from collections.abc import Sequence
+from typing import Final
 
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from .io.jsonl import Battle
+from .models import Battle, PokemonDetails, Turn
+
+_BASE_STATISTICS: Final = (
+    "base_hp",
+    "base_atk",
+    "base_def",
+    "base_spa",
+    "base_spd",
+    "base_spe",
+)
+
+
+def _extract_team_features(
+    team: Sequence[PokemonDetails],
+) -> dict[str, float]:
+    """Extract team features.
+
+    Args:
+        team: Player 1 team.
+
+    Returns:
+        Team features.
+    """
+    statistics = np.array(
+        [[pokemon[statistic] for statistic in _BASE_STATISTICS] for pokemon in team],
+    )
+
+    mean_statistics = np.mean(statistics, axis=0)
+
+    return {
+        f"p1_mean_{statistic.removeprefix('base_')}": float(value)
+        for statistic, value in zip(_BASE_STATISTICS, mean_statistics, strict=True)
+    }
+
+
+def _extract_lead_features(
+    lead: PokemonDetails,
+) -> dict[str, float]:
+    """Extract lead features.
+
+    Args:
+        lead: Opponent lead.
+
+    Returns:
+        Lead features.
+    """
+    return {
+        f"p2_lead_{statistic.removeprefix('base_')}": lead[statistic]
+        for statistic in _BASE_STATISTICS
+    }
+
+
+def _extract_timeline_features(
+    timeline: Sequence[Turn],
+) -> dict[str, float]:
+    """Extract timeline features.
+
+    Args:
+        timeline: Battle turns.
+
+    Returns:
+        Timeline features.
+    """
+    player_1_fainted = {
+        turn["p1_pokemon_state"]["name"]
+        for turn in timeline
+        if turn["p1_pokemon_state"]["status"] == "fnt"
+    }
+
+    player_2_fainted = {
+        turn["p2_pokemon_state"]["name"]
+        for turn in timeline
+        if turn["p2_pokemon_state"]["status"] == "fnt"
+    }
+
+    return {
+        "p1_pokemon_fainted": float(len(player_1_fainted)),
+        "p2_pokemon_fainted": float(len(player_2_fainted)),
+    }
+
+
+def _extract_battle_features(
+    battle: Battle,
+) -> dict[str, float]:
+    """Extract battle features.
+
+    Args:
+        battle: Input battle.
+
+    Returns:
+        Battle features.
+    """
+    return {
+        **_extract_team_features(battle["p1_team_details"]),
+        **_extract_lead_features(battle["p2_lead_details"]),
+        **_extract_timeline_features(battle["battle_timeline"]),
+    }
 
 
 def extract_features(
@@ -34,55 +131,11 @@ def extract_features(
         ),
     ):
         try:
-            team = battle["p1_team_details"]
-            opponent_lead = battle["p2_lead_details"]
-
-            timeline = battle["battle_timeline"]
-
-            if not team or not timeline:
+            if not battle["p1_team_details"] or not battle["battle_timeline"]:
                 continue
 
-            player_1_fainted = {
-                turn["p1_pokemon_state"]["name"]
-                for turn in timeline
-                if turn["p1_pokemon_state"]["status"] == "fnt"
-            }
-
-            player_2_fainted = {
-                turn["p2_pokemon_state"]["name"]
-                for turn in timeline
-                if turn["p2_pokemon_state"]["status"] == "fnt"
-            }
-
             with np.errstate(divide="raise", over="raise", invalid="raise"):
-                row: dict[str, float] = {
-                    "p1_mean_hp": float(
-                        np.mean([pokemon["base_hp"] for pokemon in team])
-                    ),
-                    "p1_mean_atk": float(
-                        np.mean([pokemon["base_atk"] for pokemon in team])
-                    ),
-                    "p1_mean_def": float(
-                        np.mean([pokemon["base_def"] for pokemon in team])
-                    ),
-                    "p1_mean_spa": float(
-                        np.mean([pokemon["base_spa"] for pokemon in team])
-                    ),
-                    "p1_mean_spd": float(
-                        np.mean([pokemon["base_spd"] for pokemon in team])
-                    ),
-                    "p1_mean_spe": float(
-                        np.mean([pokemon["base_spe"] for pokemon in team])
-                    ),
-                    "p2_lead_hp": opponent_lead["base_hp"],
-                    "p2_lead_atk": opponent_lead["base_atk"],
-                    "p2_lead_def": opponent_lead["base_def"],
-                    "p2_lead_spa": opponent_lead["base_spa"],
-                    "p2_lead_spd": opponent_lead["base_spd"],
-                    "p2_lead_spe": opponent_lead["base_spe"],
-                    "p1_pokemon_fainted": float(len(player_1_fainted)),
-                    "p2_pokemon_fainted": float(len(player_2_fainted)),
-                }
+                row = _extract_battle_features(battle)
 
                 if not np.isfinite(list(row.values())).all():
                     continue

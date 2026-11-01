@@ -10,7 +10,7 @@ from sklearn.linear_model import LogisticRegression
 
 from .features import extract_features
 from .io import read_battles, save_model, write_predictions
-from .io.jsonl import TrainingBattle
+from .models import TrainingBattle
 from .prediction import predict
 from .training import train_model
 
