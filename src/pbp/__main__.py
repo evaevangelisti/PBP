@@ -23,7 +23,7 @@ def main(
     Args:
         training_path: Path to labeled training battles in JSON Lines format.
         test_path: Path to unlabeled test battles in JSON Lines format.
-        output_directory: Directory created for the model and prediction files.
+        output_directory: Destination directory for the model and predictions.
 
     Raises:
         FileExistsError: If either destination file already exists.
@@ -67,13 +67,19 @@ def main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Train a classifier and predict battle outcomes.",
+        description="Train a classifier and predict battle outcomes",
     )
 
     parser.add_argument("training_path", type=Path)
     parser.add_argument("test_path", type=Path)
 
-    parser.add_argument("output_directory", type=Path)
+    parser.add_argument(
+        "--output-directory",
+        "-o",
+        default=Path(),
+        type=Path,
+        help="Directory for the model and predictions (default: current directory)",
+    )
 
     arguments = parser.parse_args()
 

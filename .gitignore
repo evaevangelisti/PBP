@@ -1,9 +1,6 @@
 # Data files
 data/
 
-# Output files
-outputs/
-
 # Built documentation
 docs/build/
 
